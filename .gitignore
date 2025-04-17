@@ -1,0 +1,12 @@
+.env
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+
+.vscode/
+db.sqlite3
+.DS_Store

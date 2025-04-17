@@ -1,0 +1,465 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Catalog</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+    }
+    .card-img-top {
+      height: 200px;
+      object-fit: contain;
+      background-color: #f8f9fa;
+      padding: 1rem;
+    }
+    .card-img-wrapper {
+      position: relative;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+    .tag-badge {
+      background-color: #f8f9fa;
+      color: #6c757d;
+      padding: 0.25rem 0.5rem;
+      border-radius: 50rem;
+      font-size: 0.75rem;
+      margin-right: 0.25rem;
+      margin-bottom: 0.25rem;
+      display: inline-block;
+    }
+    .price-tag {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #198754;
+    }
+    .discount-badge {
+      background-color: #dc3545;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 50rem;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+    .rating-stars {
+      color: #ffc107;
+    }
+    .filter-section {
+      background-color: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    .search-input {
+      border-radius: 50rem;
+      padding-left: 1.5rem;
+    }
+    .search-button {
+      border-radius: 50rem;
+      padding: 0.5rem 1.5rem;
+    }
+    .tag-container {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0.5rem;
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      background-color: #f8f9fa;
+    }
+    .tag-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .tag-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .tag-container::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+    .tag-search {
+      position: sticky;
+      top: 0;
+      background-color: #f8f9fa;
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+      margin: -0.5rem -0.5rem 0.5rem -0.5rem;
+    }
+    .tag-item {
+      padding: 0.25rem 0.5rem;
+      margin: 0.25rem;
+      border-radius: 0.25rem;
+      background-color: white;
+      border: 1px solid #dee2e6;
+      transition: all 0.2s;
+    }
+    .tag-item:hover {
+      background-color: #e9ecef;
+    }
+    .tag-item.selected {
+      background-color: #e7f1ff;
+      border-color: #0d6efd;
+    }
+    .tag-toggle-btn {
+      width: 100%;
+      text-align: left;
+      position: relative;
+      padding-right: 2rem;
+    }
+    .tag-toggle-btn::after {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .modal-product-image {
+      max-height: 400px;
+      object-fit: contain;
+      background-color: #f8f9fa;
+      padding: 1rem;
+    }
+    .product-gallery {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.5rem;
+    }
+    .product-gallery img {
+      height: 80px;
+      width: 80px;
+      object-fit: contain;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 0.25rem;
+      transition: all 0.2s;
+    }
+    .product-gallery img:hover {
+      border-color: #0d6efd;
+    }
+    .product-gallery img.active {
+      border-color: #0d6efd;
+    }
+    .specs-table td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .specs-table tr:last-child td {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-5 fw-bold">🛍️ Product Catalog</h1>
+    <div class="text-muted">
+      <i class="bi bi-grid-3x3-gap-fill"></i> {{ products|length }} Products
+    </div>
+  </div>
+
+  <!-- Filter Form -->
+  <div class="filter-section">
+    <form method="get" class="row g-3">
+      <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" name="q" id="search-input" class="form-control border-start-0 search-input" placeholder="Search products..." value="{{ search_query }}">
+          </div>
+      </div>
+      <div class="col-md-3">
+        <select name="category" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if cat.id|stringformat:"s" == selected_category %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <div class="accordion" id="tagAccordion">
+          <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed tag-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#tagCollapse">
+                <i class="bi bi-tags me-2"></i> Tags
+                <span class="badge bg-primary rounded-pill ms-2">{{ selected_tags|length }}</span>
+              </button>
+            </h2>
+            <div id="tagCollapse" class="accordion-collapse collapse" data-bs-parent="#tagAccordion">
+              <div class="accordion-body p-0">
+                <div class="tag-container">
+                  <div class="tag-search">
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search"></i>
+                      </span>
+                      <input type="text" class="form-control border-start-0" id="tagSearch" placeholder="Search tags...">
+                    </div>
+                  </div>
+                  <div class="d-flex flex-wrap" id="tagList">
+                    {% for tag in tags %}
+                      <div class="tag-item" data-tag-name="{{ tag.name|lower }}">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="tags" value="{{ tag.id }}" 
+                                 id="tag{{ tag.id }}" {% if tag.id in selected_tags %}checked{% endif %}>
+                          <label class="form-check-label" for="tag{{ tag.id }}">{{ tag.name }}</label>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100 search-button">
+          <i class="bi bi-funnel"></i> Filter
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Product Cards -->
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for product in products %}
+    <div class="col">
+      <div class="card h-100">
+        <div class="position-relative card-img-wrapper">
+          <img src="{{ product.thumbnail }}" class="card-img-top" alt="{{ product.title }}" loading="lazy">
+          {% if product.discount_percentage > 0 %}
+            <span class="position-absolute top-0 end-0 m-2 discount-badge">
+              -{{ product.discount_percentage }}%
+            </span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h5 class="card-title mb-3">{{ product.title }}</h5>
+          <p class="card-text text-muted small mb-3">{{ product.description|truncatewords:20 }}</p>
+          
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="price-tag">${{ product.price }}</div>
+            <div class="rating-stars">
+              {% for i in "12345"|make_list %}
+                {% if forloop.counter <= product.rating %}
+                  <i class="bi bi-star-fill"></i>
+                {% else %}
+                  <i class="bi bi-star"></i>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %}">
+              <i class="bi bi-box-seam"></i> {{ product.availability_status }}
+            </span>
+            <span class="badge bg-info">
+              <i class="bi bi-tag"></i> {{ product.category.name }}
+            </span>
+          </div>
+
+          <div class="mb-3">
+            {% for tag in product.tags.all %}
+              <span class="tag-badge">{{ tag.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="card-footer bg-white border-top-0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <i class="bi bi-shop"></i> {{ product.brand }}
+            </small>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#productModal{{ product.id }}">
+              <i class="bi bi-eye"></i> View Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-search display-1 text-muted"></i>
+        <h3 class="mt-3">No products found</h3>
+        <p class="text-muted">Try adjusting your search criteria</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    {% if products.has_previous %}
+      <a href="?page={{ products.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}" class="page-link">&laquo; Previous</a>
+    {% endif %}
+
+    <span class="current-page">
+      Page {{ products.number }} of {{ products.paginator.num_pages }}
+    </span>
+
+    {% if products.has_next %}
+      <a href="?page={{ products.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% for tag in selected_tags %}&tags={{ tag }}{% endfor %}" class="page-link">Next &raquo;</a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Product Detail Modals -->
+{% for product in products %}
+<div class="modal fade" id="productModal{{ product.id }}" tabindex="-1" aria-labelledby="productModalLabel{{ product.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productModalLabel{{ product.id }}">{{ product.title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <img src="{{ product.thumbnail }}" class="modal-product-image w-100 mb-3" alt="{{ product.title }}" id="mainImage{{ product.id }}" loading="lazy">
+            <div class="product-gallery">
+              {% for image_url in product.images %}
+                <img src="{{ image_url }}" onclick="changeImage(this, 'mainImage{{ product.id }}')" alt="{{ product.title }}" loading="lazy">
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h4 class="mb-1">${{ product.price }}</h4>
+                {% if product.discount_percentage > 0 %}
+                  <span class="badge bg-danger">-{{ product.discount_percentage }}%</span>
+                {% endif %}
+              </div>
+              <div class="rating-stars">
+                {% for i in "12345"|make_list %}
+                  {% if forloop.counter <= product.rating %}
+                    <i class="bi bi-star-fill"></i>
+                  {% else %}
+                    <i class="bi bi-star"></i>
+                  {% endif %}
+                {% endfor %}
+                <small class="text-muted ms-2">({{ product.rating }})</small>
+              </div>
+            </div>
+            
+            <p class="text-muted mb-3">{{ product.description }}</p>
+            
+            <div class="mb-3">
+              <span class="badge {% if product.stock > 0 %}bg-success{% else %}bg-danger{% endif %} me-2">
+                <i class="bi bi-box-seam"></i> {{ product.availability_status }}
+              </span>
+              <span class="badge bg-info me-2">
+                <i class="bi bi-tag"></i> {{ product.category.name }}
+              </span>
+              <span class="badge bg-secondary">
+                <i class="bi bi-shop"></i> {{ product.brand }}
+              </span>
+            </div>
+
+            <div class="mb-3">
+              {% for tag in product.tags.all %}
+                <span class="tag-badge">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+
+            <div class="table-responsive">
+              <table class="table specs-table">
+                <tbody>
+                  <tr>
+                    <td><strong>SKU:</strong></td>
+                    <td>{{ product.sku }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Dimensions:</strong></td>
+                    <td>{{ product.width }}" × {{ product.height }}" × {{ product.depth }}"</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Weight:</strong></td>
+                    <td>{{ product.weight }} lbs</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Warranty:</strong></td>
+                    <td>{{ product.warranty_information }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Shipping:</strong></td>
+                    <td>{{ product.shipping_information }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Return Policy:</strong></td>
+                    <td>{{ product.return_policy }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Min Order:</strong></td>
+                    <td>{{ product.minimum_order_quantity }} units</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">
+          <i class="bi bi-cart-plus"></i> Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const tagSearch = document.getElementById('tagSearch');
+    const tagItems = document.querySelectorAll('.tag-item');
+    
+    tagSearch.addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      
+      tagItems.forEach(item => {
+        const tagName = item.dataset.tagName;
+        if (tagName.includes(searchTerm)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Update selected tags count
+    const updateSelectedCount = () => {
+      const selectedCount = document.querySelectorAll('input[name="tags"]:checked').length;
+      const badge = document.querySelector('.tag-toggle-btn .badge');
+      badge.textContent = selectedCount;
+    };
+
+    document.querySelectorAll('input[name="tags"]').forEach(checkbox => {
+      checkbox.addEventListener('change', updateSelectedCount);
+    });
+    updateSelectedCount();
+  });
+
+  function changeImage(thumbnail, mainImageId) {
+    // Update main image
+    document.getElementById(mainImageId).src = thumbnail.src;
+    
+    // Update active state
+    const gallery = thumbnail.parentElement;
+    gallery.querySelectorAll('img').forEach(img => img.classList.remove('active'));
+    thumbnail.classList.add('active');
+  }
+</script>
+</body>
+</html>
